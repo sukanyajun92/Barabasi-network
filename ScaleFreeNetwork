@@ -1,0 +1,31 @@
+import java.util.Scanner;
+
+/**
+ * This class contains the main method to run the program
+ * @author Rithika
+ *
+ */
+public class scaleFreeNetwork {
+	
+	public static void main(String[] args) {
+		
+		int initial_numNodes, totalNodes, edges;		
+		
+		Scanner keyboard = new Scanner(System.in);
+		
+		System.out.print("Enter the initial number of nodes for the network: ");
+		initial_numNodes = keyboard.nextInt();
+		//System.out.println();
+		
+		System.out.print("Enter the total number of nodes in the network: ");
+		totalNodes = keyboard.nextInt();
+		
+		System.out.print("Enter the total number of edges for each node: ");
+		edges = keyboard.nextInt();
+		
+		BarabasiAlbertModel model = new BarabasiAlbertModel(initial_numNodes, totalNodes, edges);
+		model.generateInitialNetwork();
+		
+	}
+
+}
