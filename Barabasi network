@@ -1,0 +1,130 @@
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+public class BarabasiAlbertModel {
+	
+	String serverName = "cs1.utdallas.edu"; 	
+	//Graph g;
+	int initialNumNodes, totalNodes, edges;	
+	String[] servers = {"net01.utdallas.edu", "net02.utdallas.edu", "net03.utdallas.edu", "net04.utdallas.edu",
+            "net05.utdallas.edu", "net06.utdallas.edu"}; 
+	
+	//Constructor
+	public BarabasiAlbertModel(int initialNodes, int tNodes, int e) {
+		initialNumNodes = initialNodes;
+		totalNodes = tNodes;
+		edges = e;
+	}
+	
+	Node nodes[] = new Node[totalNodes];
+	
+	public void generateInitialNetwork() {
+		
+		int udpPortNum;
+		int[] array = {80, 81, 82, 83, 84};  //have to change the numbers to actual ports		
+		//the udp port numbers should be the ones from the file.****
+		
+		//Create node objects and udp server sockets
+		for (int i = 0; i < initialNumNodes; i++) 
+		{
+			nodes[i] = new Node(i);
+			System.out.println("creating object " + i);
+			udpPortNum = array[i];
+			try {
+				nodes[i].datagramserver = new DatagramSocket(udpPortNum);
+			} catch (SocketException e) {
+				e.printStackTrace();
+				System.out.println("Cannot create UDP server socket");
+			}
+		}
+		
+		//Create TCP connections among the initial nodes in the network
+		for (int i = 0; i < initialNumNodes; i++) 
+		{
+			Random random = new Random();
+			int tcpPort = random.nextInt(9000) + 8800;			
+			
+			try { 
+				  //Create a server socket for each node
+				   nodes[i].serverSocket = new ServerSocket(tcpPort); 		
+				   System.out.println("creating a server socket" + i);					  
+			  }catch (IOException e)  { 
+			       System.err.println("Could not create a server socket."); 
+			       System.exit(1); 
+			  }
+			 
+			  if(i == 0) {				 
+			
+			   for (int j = (i + 1); j < initialNumNodes; j++) {
+				
+				  try { 
+					    nodes[j].clientSocket = new Socket(serverName, tcpPort);
+					    System.out.println("creating a client socket" + j);	
+				      } 
+				    catch (IOException e) 
+				        { 
+				         System.err.println("Could not create a client socket."); 
+				         System.exit(1); 
+				        } 
+
+				  try {										
+						Socket skt = nodes[i].serverSocket.accept();						
+					} catch (Exception e) {
+						System.err.println("Accept failed."); 
+				        System.exit(1); 					
+					}
+			     }
+			  }			 
+		  }			
+	}		
+	
+	//Complete the total network by joining the new incoming nodes
+	public void generateCompleteNetwork() {
+		
+		String serverName = "cs2.utdallas.edu"; //server name is an example
+		
+		//Create node objects for the rest of the nodes in the network
+		for(int k = initialNumNodes; k < totalNodes; k++) {		
+			  nodes[k] = new Node(k);				
+		}		
+		
+		for(int i = initialNumNodes; i < totalNodes; i++) {
+			
+			Map m = nodes[i].readInitialNodesInfo();
+			//****if the incoming node selects a random m0 node then use the following code
+			Random       random    = new Random();
+			List<String> keys      = new ArrayList<String>(m.keySet());
+			String       randomIPAddress = keys.get(random.nextInt(keys.size()));
+			int       udp     = (int) m.get(randomIPAddress);
+			System.out.println("the random udp port chosen is: " + udp);	
+			
+			//****otherwise will each incoming node ask only particular m0 node for information
+			
+			//Create udp client socket
+			try {
+			  nodes[i].datagramclient = new DatagramSocket();			  
+			}
+			catch(IOException e) {
+				e.printStackTrace();
+				System.out.println("Could not create UDP client socket");
+			}
+			
+			//have to check if there are new nodes attached in the network...how?
+			//Request the m0 nodes for routing table information
+			//DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, randomIPAddress, udp);
+		    //nodes[i].datagramclient.send(sendPacket);
+			
+		}
+		
+	}
+
+}
